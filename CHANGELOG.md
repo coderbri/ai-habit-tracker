@@ -2,10 +2,24 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
-<!-- ## v0.3.0 – Authentication
+## v0.3.0 – Establishing User Model and Authentication
 **Released:** July 24, 2026
 
---- -->
+- Built the `User` model with pre-save password hashing, an instance method to compare passwords on login, and a `toJSON` override to strip the password hash from any response
+- Built `protect` middleware to verify JWTs from the `Authorization` header and attach the authenticated user to `req.user`
+- Built `authController.js` covering registration, login, fetching the current user, and profile updates, each issuing/expecting a signed JWT
+- Wired all of the above through new `/api/auth` routes and mounted them in `server.js`
+- Tested registration and login end-to-end in Postman
+
+### Files created/modified:
+
+- `server/models/User.js` (created)
+- `server/middleware/auth.js` (created)
+- `server/controllers/authController.js` (created)
+- `server/routes/auth.js` (created)
+- `server/server.js` (modified — mounted `/api/auth` routes)
+
+---
 
 ## v0.2.0 – Setting up Environmental Variables and Backend Server
 **Released:** July 24, 2026

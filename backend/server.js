@@ -1,13 +1,21 @@
+/**
+ * @file: server.js
+ * @description: Application entry point for Express server configuration and initialization.
+ */
+
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { connectDB } from "./config/db.js";
 import authRoutes from "./routes/auth.js";
+import habitRoutes from "./routes/habits.js";
+
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
 
 /**
+ * * Parse and format allowed origins from CLIENT_URL env
  * Defines which clients can access the API via a comma-separated CLIENT_URL
  * env variable, normalized by trimming whitespace and removing empty values
  * to keep it clean and resilient.
@@ -34,25 +42,24 @@ const corsOptions = {
     allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-// === MIDDLEWARE ===
+// === GLOBAL MIDDLEWARE ===
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 app.use(express.json({ limit: "1mb" }));
 
-/**
- * Offers a reliable signal for server uptime and responsiveness, including
- * a timestamp for monitoring and debugging in production.
- */
+/** Uptime and system responsiveness check with a 
+    timestamp for monitoring and debugging in production. */
 app.get("/api/health", (req, res) => {
     res.json({ status: "ok", time: new Date().toISOString() });
 });
 
+// ==== ROUTE HANDLERS =====
 app.use("/api/auth", authRoutes);
+app.use("/api/habits", habitRoutes);
 
-/**
- * Error-handling middleware: catches unknown routes and processes all
- * application errors in a consistent format for maintainability.
- */
+// ==== ERROR HANDLING =====
+/** Error-handling middleware: catches unknown routes and processes all
+    application errors in a consistent format for maintainability. */
 app.use(notFound);
 app.use(errorHandler);
 

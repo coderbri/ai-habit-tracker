@@ -2,6 +2,25 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.4.0 – Habits CRUD
+**Release Date:** July 25, 2026
+
+- Built the `Habit` model: name, description, category (enum), frequency (`daily`/`weekly`), target days, color, icon, an `isArchived` soft-delete flag, and an `order` field for manual drag-and-drop reordering
+- Built the `HabitLog` model for daily completions, storing `completedDate` as a `"YYYY-MM-DD"` string to avoid timezone offset issues, with a compound unique index on `userId` + `habitId` + `completedDate` to prevent duplicate completions per day
+- Built `habitController.js` covering `getHabits`, `createHabit`, `updateHabit`, `deleteHabit`, `archiveHabit`, and `reorderHabits`; deleting a habit cascades to remove its associated `HabitLog` entries
+- Wired everything through new `/api/habits` routes, all protected by the existing `protect` JWT middleware, and mounted them in `server.js`
+- Tested the full CRUD flow in Postman using an `Authorization: Bearer <token>` header on every request; see [API_TESTING.md](./API_TESTING.md) for full request/response examples
+
+### Files created/modified:
+
+- `server/models/Habit.js` (created)
+- `server/models/HabitLog.js` (created)
+- `server/controllers/habitController.js` (created)
+- `server/routes/habits.js` (created)
+- `server/server.js` (modified — mounted /api/habits routes)
+
+---
+
 ## v0.3.0 – Establishing User Model and Authentication
 **Released:** July 24, 2026
 

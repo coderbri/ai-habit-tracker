@@ -14,15 +14,6 @@ import {
 /**
  * Mark a habit complete for a specified date (defaults to today).
  * Idempotent upsert operation preventing duplicate entries.
- * 
- * extract habit id and date from the request body. if date is not provided, set today by default 
- * start by verifying that habit exists and belongs to the current user as security check, to prevent
- * users from marking completions on habits they don't own.
- * if habit isn't found, return 404, then use .findOneAndUpdate() with upsert to create a clean pattern
- * for if a log for this habit and date exists, don't error out and instead return the existing one
- * if doesn't exist, create it. the set on insert operator only sets fields when an insert actually happens,
- * not on update. the result is item potent, calling markComplete multiple times for the same habit on the same day
- * is completely safe.
  */
 export const markComplete = async (req, res) => {
     try {
@@ -48,7 +39,9 @@ export const markComplete = async (req, res) => {
 };
 
 /**
- * Unmark a completion log entry for a specified habit and date.
+ * Unmark a completion log entry for a specified habit and date by 
+ * deleting the completion log for a given jabit and date, reverting 
+ * that day back to incomplete.
  */
 export const unmarkComplete = async (req, res) => {
     try {
@@ -69,8 +62,6 @@ export const unmarkComplete = async (req, res) => {
 
 /**
  * Fetch all completion logs for the authenticated user for today.
- * returns all logs for current user where completed dates equals today's key
- * the dashboard uses this to know which habits are already checked off today
  */
 export const getToday = async (req, res) => {
     try {
@@ -85,9 +76,9 @@ export const getToday = async (req, res) => {
 };
 
 /**
- * Fetch completion logs within a specified date range (?start=YYYY-MM-DD&end=YYYY-MM-DD).
- * takes start and end query parameters and returns logs in that range.
- * the weekly grid and the comparison charts on the insights page use this.
+ * Fetch completion logs within a specified date range 
+ * (?start=YYYY-MM-DD&end=YYYY-MM-DD).
+ * For dashboard layout: weekly grid, week-over-week charts, etc.
  */
 export const getRange = async (req, res) => {
     try {
@@ -104,11 +95,8 @@ export const getRange = async (req, res) => {
 };
 
 /**
- * Generates a 90-day activity heatmap dataset across all active user habits.
- * 90-day GitHub-styled heat map.
- * aggregate completion counts per day across all the user's habits.
- * initialize every day in the range with zero, then count up the actual completions.
- * the result is an array of date and count objects ready for the frontend.
+ * Builds a 90-day activity heatmap dataset across all active user habits.
+ * Zero-fills every day in range. then tallies actual completions per day.
  */
 export const getHeatmap = async (req, res) => {
     try {
@@ -131,11 +119,8 @@ export const getHeatmap = async (req, res) => {
 };
 
 /**
- * Fetch detailed metrics for a single habit (streaks, completion rate, monthly totals).
- * get stats for a single habit's deep dive.
- * fetch the habit, then all its logs sorted newest first, calculate streaks using dateHelpers,
- * compute the overall completion rate based on days since the habit was created, and break down 
- * completions by month, all in a JSON response
+ * Fetch detailed metrics for a single habit (current/longest streaks, completion rate
+ * since completion, monthly total breakdown).
  */
 export const getHabitStats = async (req, res) => {
     try {
@@ -153,7 +138,7 @@ export const getHabitStats = async (req, res) => {
         const dateKeys = logs.map((l) => l.completedDate);
         const { current, longest } = calcStreak(dateKeys);
         
-        // Calculate historical completion rate
+        // Completion rate = total logs / days since the habit was created
         const createdKey = habit.createdAt.toISOString().slice(0, 10);
         const today = todayKey();
         const start = new Date(createdKey);
@@ -185,9 +170,7 @@ export const getHabitStats = async (req, res) => {
 
 /**
  * Fetch summary stats (30-day activity & streaks) across all non-archived user habits.
- * powers stats page. for each non-archived habit, compute completions in the last 30 days, 
- * current streak, and longest streak.
- * returns an array of per-habit summaries
+ * This powers the stats page.
  */
 export const getAllStats = async (req, res) => {
     try {

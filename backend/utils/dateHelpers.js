@@ -33,25 +33,19 @@ export const lastNDays = (n) => {
 };
 
 /** 
- * Calculates current and longest completion streaks. 
- * @param {string[]} sortedDateKeys – Array of "YYYY-MM-DD" keys sorted descending (newest first).
+ * Calculates current and longest completion streaks from a list of completion dates. 
+ * @param {string[]} sortedDateKeys – Array of "YYYY-MM-DD" keys, sorted descending (newest first).
  * @returns {{ current: nummber, longest: number }}
  */
 export const calcStreak = (sortedDateKeys) => {
-    // sortedDateKeys newest, first, unique
-    // takes in an array of date keys – newest first – and returns current an longest streak
     if (!sortedDateKeys.length) return { current: 0, longest: 0 };
     const set = new Set(sortedDateKeys);
     
     const today = todayKey();
     const yesterday = toDateKey(subDays(new Date(), 1));
     
-    // Calculate current active streak
-    // for current streak, if today nor yesterday are in the set, the streak is broken
-    // return is 0
-    // if today is in the set, count backward from today
-    // if today isn't in the set but yesterday is, the streak isn't broken yet because the user hasn't checked in
-    // so count backwards from yesterday, incrementing by 1 as long as the previous date is still in the set
+    // Current streak: broken (0) if neither today nor yesterday is logged.
+    // Otherwise, count backward from today, or from yesterday if today's not logged yet.
     let current = 0;
     let cursor = new Date();
     
@@ -65,11 +59,9 @@ export const calcStreak = (sortedDateKeys) => {
         }
     }
     
-    // Calculate historical longest streak
-    // for longest streak, sort dates by ascending, then iterate through.
-    // for each date, check if its exactly one day after the previous. 
-    // if so increment the run counter, otherwise, reset to 1
-    // track the maximum runs across the entire history
+    // Longest streak: sort dates by ascending (oldest -> newest), extending the run 
+    // when consecutive by checking if its been 1d exactly after the previous. If so,
+    // increment counter, otherwise, reset to 1, tracking the max run seen.
     const sortedAsc = [...sortedDateKeys].sort();
     let longest = 0;
     let run = 0;

@@ -12,6 +12,7 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
 - [Pages & Functionality](#pages--functionality)
+- [Implementation Notes](#implementation-notes)
 - [Roadmap](#roadmap)
 
 ## Features
@@ -91,7 +92,7 @@ ai-habit-tracker/
    ```
 2. Install backend dependencies
    ```bash
-   cd backend
+   cd server
    npm install
    ```
 3. Install frontend dependencies
@@ -102,18 +103,28 @@ ai-habit-tracker/
 4. Configure environment variables (see below)
 5. Seed the database (optional)
    ```bash
-   cd ../backend
+   cd ../server
    npm run seed
    ```
-6. Run the development backends
+6. Run the development servers
    ```bash
-   # from /backend
+   # from /server
    npm run dev
 
    # from /client
    npm run dev
    ```
 
+## Environment Variables
+
+Create a `.env` file in the `server/` directory with the following:
+
+```
+MONGODB_URI=
+JWT_SECRET=
+GEMINI_API_KEY=
+PORT=
+```
 
 ## Pages & Functionality
 
@@ -150,6 +161,12 @@ Week navigation (past weeks browsable, future weeks disabled), summary cards (we
 - Top habits progress list (ranked by 30-day completions)
 - Full habit list with icon, streak, and completion stats
 - Floating AI chat bubble for querying personal habit data (context built server-side from habit history and passed to Gemini), rendered with markdown support
+
+## Implementation Notes
+
+Places where this project intentionally diverges from tutorial instruction, tracked here along with the reasoning for future reference.
+
+- **Unmarking habit completions (`unmarkComplete`):** the tutorial used `findOneAndUpdate` to "unmark" a habit, but this was changed to `findOneAndDelete`. A `HabitLog` document has no `completed: Boolean` field to flip — the mere existence of the row for a given habit and date *is* the completion signal. Deleting the row is what actually reverts that day to incomplete, and it mirrors how `markComplete` creates the row in the first place.
 
 ## Roadmap
 

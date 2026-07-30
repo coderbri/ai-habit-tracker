@@ -165,3 +165,96 @@ Returns a success message:
     "message": "Habit deleted"
 }
 ```
+
+---
+
+## Logs
+
+Base route: `http://localhost:8000/api/logs`
+
+### Mark Complete — `POST /api/logs/`
+
+Request body:
+```json
+{
+    "habitId": "6a699c76184261089a49e112"
+}
+```
+
+Returns `201` with the created (or existing, if already marked) log entry:
+```json
+{
+    "_id": "6a699cbc61e6975abf3a9df8",
+    "completedDate": "2026-07-29",
+    "habitId": "6a699c76184261089a49e112",
+    "userId": "6a6415c1ea27f02dc34f6aaa",
+    "__v": 0,
+    "createdAt": "2026-07-29T06:25:00.169Z",
+    "notes": "",
+    "updatedAt": "2026-07-29T06:25:00.169Z"
+}
+```
+
+### Get Today — `GET /api/logs/today`
+
+Returns completed habits for the current day (empty array if nothing's been marked yet):
+```json
+[
+    {
+        "_id": "6a699cbc61e6975abf3a9df8",
+        "completedDate": "2026-07-29",
+        "habitId": "6a699c76184261089a49e112",
+        "userId": "6a6415c1ea27f02dc34f6aaa",
+        "__v": 0,
+        "createdAt": "2026-07-29T06:25:00.169Z",
+        "notes": "",
+        "updatedAt": "2026-07-29T06:25:00.169Z"
+    }
+]
+```
+
+### Get Heatmap — `GET /api/logs/heatmap`
+
+Returns the last 90 days, with today as the last entry:
+```json
+[
+    { "...": "..." },
+    { "date": "2026-07-28", "count": 0 },
+    { "date": "2026-07-29", "count": 1 }
+]
+```
+
+### Get All Stats — `GET /api/logs/stats`
+
+Returns per-habit 30-day stats plus the list of days covered:
+```json
+{
+    "perHabit": [
+        {
+            "habitId": "6a699c76184261089a49e112",
+            "name": "Drink 2L of water",
+            "icon": " 💧 ",
+            "color": "#0ea5e9",
+            "category": "Health",
+            "completions30d": 1,
+            "currentStreak": 1,
+            "longestStreak": 1
+        }
+    ],
+    "days": ["2026-06-30", "2026-07-01", "...", "2026-07-29"]
+}
+```
+
+### Unmark Complete — `DELETE /api/logs/`
+
+Takes the same body shape as Mark Complete:
+```json
+{ "habitId": "6a699c76184261089a49e112" }
+```
+
+Returns:
+```json
+{ "message": "Unmarked" }
+```
+
+> **Known issue:** this currently doesn't delete the log entry — see the v0.5.0 changelog note. Re-test with `GET /api/logs/today` after calling this to confirm once fixed.

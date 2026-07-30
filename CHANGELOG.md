@@ -2,6 +2,28 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.5.0 – Building the Habit Log API & Date Helpers
+**Release Date:** July 30, 2026
+
+- Implemented habit completions — the check-offs that drive streaks and heatmaps — as one HabitLog record per habit per day
+- Built `logController.js` covering `markComplete`, `unmarkComplete`, `getToday`, `getRange`, `getHeatmap`, `getHabitStats`, and `getAllStats`
+  - `markComplete` is an idempotent upsert (via `$setOnInsert`), so marking the same habit complete twice in one day is safe
+  - `unmarkComplete` uses `DELETE` rather than a more typical `PATCH`/body flag — unusual, but keeps the mark/unmark pair symmetric as two clear actions on the same route
+- Built `utils/dateHelpers.js` for date-key formatting and streak math: `todayKey`, `last90Days`, `currentWeekKeys`, `lastNDays`, and `calcStreak` (walks completion dates to compute current and longest streaks)
+- Wired everything through new `/api/logs` routes, protected by the existing JWT middleware, and mounted them in `server.js`
+- Tested in Postman with an Authorization: `Bearer <token>` header on every request; see [`API_TESTING.md`](./API_TESTING.md) for full request/response examples
+
+> Known issue: unmarkComplete currently calls `findOneAndUpdate` without an update document, so the log entry isn't actually removed — needs to be `findOneAndDelete`. Flagged for a fix next session.
+
+### Files created/modified:
+
+- `server/controllers/logController.js` (created)
+- `server/utils/dateHelpers.js` (created)
+- `server/routes/logs.js` (created)
+- `server/server.js` (modified — mounted /api/logs routes)
+
+---
+
 ## v0.4.0 – Habits CRUD
 **Release Date:** July 25, 2026
 

@@ -2,6 +2,42 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.6.0 – Building AI APIs with Google Gemini
+**Release Date:** July 31, 2026
+
+- Integrated Google's Gemini model to power 5 AI features:
+  - **Weekly report** — personalized review of the past 7 days
+  - **Habit suggestions** — 3 personalized habits based on the user's goals
+  - **Streak recovery plan** — a 3-day comeback plan when a streak breaks
+  - **Habit chat** — natural-language Q&A grounded in the user's habit data
+  - **Morning motivation** — a short personalized message each morning
+- Built the `AIInsight` model to persist every AI response:
+  - `type` is constrained to `["weekly", "suggestion", "recovery", "chat", "morning"]`, useful for filtering by content type later
+  `meta` is a flexible field for extra context per type (e.g. the question asked, or the habit id behind a recovery plan)
+  - Persisting insights matters for three reasons: (1) gives users a history to look back on, (2) enables caching to avoid re-calling the API for the same content, and (3) is real usage data to improve prompts later
+- Built the Gemini client wrapper (`utils/aiService.js`):
+  - Lazily initializes the `GoogleGenAI` client only on first use, and only if `GEMINI_API_KEY` is set — so the app doesn't crash on startup when the key is missing
+  - `isAIEnabled()` checks whether the key is configured
+  - `parseJSON()` strips markdown code fences (````json ... ````) from model output before parsing, for endpoints that expect structured JSON back
+  - `chatCompletion()` wraps the actual Gemini call; if AI is disabled or the request fails, it returns a graceful fallback message instead of throwing
+  - `SYSTEM_PROMPTS` holds one system instruction per feature, controlling tone, length, and (for suggestions) the expected JSON shape
+- Built `aiController.js` with `weeklyReport`, `suggestHabits`, `recoveryPlan`, `chatAnalysis`, and `morningMotivation`, each assembling the relevant habit/log context and calling `chatCompletion` with the matching system prompt
+- Wired everything through new `/api/ai` routes, protected by the existing JWT middleware, and mounted them in `server.js`
+
+> Known issues (deferred to next session, which will focus on Postman testing):
+> - `buildWeeklyContext` computes a habit's 7-day completion count but never uses it — the returned object still carries an unused/undefined `completedDate` field instead, so weekly reports currently reference the wrong data per habit.
+> - `suggestHabits` parses the AI's JSON response but never assigns it to `suggestions`, so this endpoint currently always falls back to the hard-coded default habits regardless of what Gemini returns.
+
+### Files created/modified:
+
+- `server/models/AIInsight.js` (created)
+- `server/utils/aiService.js` (created)
+- `server/controllers/aiController.js` (created)
+- `server/routes/ai.js` (created)
+- `server/server.js` (modified — mounted /api/ai routes)
+
+---
+
 ## v0.5.0 – Building the Habit Log API & Date Helpers
 **Release Date:** July 30, 2026
 

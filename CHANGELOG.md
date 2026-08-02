@@ -2,6 +2,21 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.6.2 – Fixing Weekly Report Persistence
+**Release Date:** August 2, 2026
+
+- Addressed the `weeklyReport` bug flagged in v0.6.1: the endpoint never called `AIInsight.create()`, so its output wasn't being persisted to MongoDB despite the route responding successfully
+- Added an `AIInsight.create()` call with `type: "weekly"`, matching the pattern already used by `suggestHabits`, `recoveryPlan`, `chatAnalysis`, and `morningMotivation`
+- Re-tested `POST /api/ai/weekly-report` in Postman and confirmed a document is now recorded in MongoDB after each call
+- First attempt at fixing the `completedDate` data bug from v0.6.1 (changing `h.completedDate` to `h.completed`) didn't resolve it — h is the raw Habit document and has no completed field
+- Correctly fixed on the second pass: `buildWeeklyContext` now returns **`completedDate: completed`**, referencing the local comp`leted variable (the actual computed 7-day completion count) instead of a non-existent property on h
+
+### Files created/modified:
+
+- **`server/controllers/aiController.js`** (added `AIInsight.create()` call in `weeklyReport`; fixed `buildWeeklyContext` to return the actual completion count instead of undefined)
+
+---
+
 ## v0.6.1 – Testing AI APIs
 **Release Date:** August 1, 2026
 
@@ -12,7 +27,6 @@ All notable changes to the AI Habit Tracker project will be documented in this f
 - See [`API_TESTING.md`](API_TESTING.md) for full before/after request-response examples on the suggestHabits fix.
 
 > **Known issues carried into next session:**
-
 > - `weeklyReport` doesn't persist its output as an `AIInsight` (needs an `AIInsight.create()` call added, matching the other four AI endpoints).
 > - `buildWeeklyContext` still computes a habit's 7-day completion count but never returns it — the per-habit object still carries an unused/undefined `completedDate` field instead of that count, so weekly reports are generated from incomplete data despite appearing to work correctly.
 

@@ -313,9 +313,9 @@ Returns:
 }
 ```
 
-> **Known issue:** unlike the other four AI endpoints, `weeklyReport` never calls `AIInsight.create()` — the route responds successfully, but nothing gets persisted to MongoDB. Found by comparing against `suggestHabits`/`chatAnalysis`, which do save.
+> **Resolved (v0.6.2):** `weeklyReport` originally never called `AIInsight.create()`, so its output wasn't persisted to MongoDB despite the route responding successfully. Fixed by adding the missing call; confirmed a document is now recorded after each call.
 >
-> **Related known issue:** `buildWeeklyContext` computes each habit's actual 7-day completion count but never returns it — the per-habit object it builds still carries an unused `completedDate` field instead. The report above still reads plausibly because the model works around vague input, but it isn't actually being generated from real completion numbers yet. See changelog v0.6.1.
+> **Resolved (v0.6.2):** `buildWeeklyContext` also wasn't returning each habit's actual 7-day completion count — a first-pass fix (`h.completed`) still read a non-existent property on the `Habit` document. Corrected to `completedDate: completed`, referencing the local variable that holds the real computed count. The weekly report is now generated from accurate per-habit data.
 
 <a id="suggest-habits"></a>
 ### Suggest Habits — `POST /api/ai/suggest-habits`

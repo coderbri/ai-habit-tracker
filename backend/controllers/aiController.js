@@ -25,7 +25,7 @@ const buildWeeklyContext = async (userId) => {
             name: h.name,
             category: h.category,
             frequency: h.frequency,
-            completedDate: h.completedDate,
+            completedDate: completed,
             targetDays: h.targetDays,
         };
     });
@@ -54,6 +54,12 @@ export const weeklyReport = async (req, res) => {
             const { content } = await chatCompletion({
                 system: SYSTEM_PROMPTS.weekly,
                 user: userMsg,
+            });
+            
+            await AIInsight.create({
+                userId: req.user._id,
+                type: "weekly",
+                content,
             });
             
             res.json({ content });

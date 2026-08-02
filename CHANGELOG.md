@@ -2,6 +2,28 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.6.1 – Testing AI APIs
+**Release Date:** August 1, 2026
+
+- Hit a `404` while route-testing in Postman: `gemini-2.5-flash` is no longer available to new users. Fixed by updating `GEMINI_MODEL` in `.env` and the fallback default in `utils/aiService.js` to a current Gemini model.
+- Confirmed the `suggestHabits` bug flagged in v0.6.0: this endpoint was still returning the exact hardcoded fallback set on every call. Applied the fix (assigning the parsed `suggestion` array into `suggestions` instead of discarding it) and reverified — subsequent calls returned suggestions that actually reflected the submitted goals, productive time, and struggles.
+- Found a new bug while testing `weeklyReport`: unlike `suggestHabits`, `recoveryPlan`, `chatAnalysis`, and `morningMotivation`, this endpoint never calls `AIInsight.create()` — the route responds successfully, but its output isn't persisted to MongoDB.
+- Verified `chatAnalysis` end-to-end with a real question ("Which day of the week am I most consistent?") and confirmed the response was grounded in actual per-day completion counts.
+- See [`API_TESTING.md`](API_TESTING.md) for full before/after request-response examples on the suggestHabits fix.
+
+> **Known issues carried into next session:**
+
+> - `weeklyReport` doesn't persist its output as an `AIInsight` (needs an `AIInsight.create()` call added, matching the other four AI endpoints).
+> - `buildWeeklyContext` still computes a habit's 7-day completion count but never returns it — the per-habit object still carries an unused/undefined `completedDate` field instead of that count, so weekly reports are generated from incomplete data despite appearing to work correctly.
+
+### Files created/modified:
+
+- `server/.env` (updated GEMINI_MODEL)
+- `server/utils/aiService.js` (updated default model fallback)
+- `server/controllers/aiController.js` (fixed suggestHabits parsing bug)
+
+---
+
 ## v0.6.0 – Building AI APIs with Google Gemini
 **Release Date:** July 31, 2026
 

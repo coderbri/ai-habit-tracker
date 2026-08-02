@@ -77,10 +77,10 @@ export const suggestHabits = async (req, res) => {
             user: userMsg,
         });
         
-        // ! NEEDS REVIEW
         let suggestions = [];
         try {
             const parsed = JSON.parse(content.replace(/```json|```/g, "").trim());
+            if (Array.isArray(parsed.suggestion)) suggestions = parsed.suggestion;
         } catch {
             suggestions = [];
         }
@@ -92,7 +92,7 @@ export const suggestHabits = async (req, res) => {
                     name: "10-minute morning walk",
                     description: "Start the day with light movement and fresh air.",
                     frequency: "daily",
-                    category: "Fitness",
+                    category: "fitness",
                     icon: "🚶🏻",
                     reason: "Low-friction way to build consistency early in the day.",
                 },

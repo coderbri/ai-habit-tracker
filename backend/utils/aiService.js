@@ -18,7 +18,7 @@ const getClient = () => {
     return client
 };
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = process.env.GEMINI_MODEL || "gemini-3.6-flash";
 
 /** Checks if AI features are enabled based on environment variables. */
 export const isAIEnabled = () => !!process.env.GEMINI_API_KEY;

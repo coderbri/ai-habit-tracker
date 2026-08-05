@@ -1,3 +1,7 @@
+/**
+ * FILE TO BE DELETED
+ * @file: frontend/src/utils/mockData.js
+ */
 // ────────────────────────────────────────────────────────────────────────────
 // Mock data for the UI boilerplate.
 // Replace api/axios.js with a real axios client and delete this file when

@@ -1,6 +1,6 @@
 # AI Habit Tracker
 
-A full-stack, AI-powered habit tracking application built with the MERN stack. Users can build and maintain daily habits with streak tracking, a 90-day GitHub-styled activity heatmap, weekly insights, and five AI features powered by Google Gemini 2.5 Flash.
+A full-stack, AI-powered habit tracking application built with the MERN stack. Users can build and maintain daily habits with streak tracking, a 90-day GitHub-styled activity heatmap, weekly insights, and five AI features powered by Google Gemini 3.6 Flash.
 
 > **Note:** This is a personal tutorial/learning project used to practice implementing patterns and features for future personal projects. It is not intended for public deployment.
 
@@ -13,6 +13,7 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 - [Environment Variables](#environment-variables)
 - [Pages & Functionality](#pages--functionality)
 - [Implementation Notes](#implementation-notes)
+- [Known Issues](#known-issues)
 - [Roadmap](#roadmap)
 
 ## Features
@@ -23,7 +24,7 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 - Weekly insights dashboard with themed charts
 - Light/dark mode with persisted theme preference
 - Confetti celebrations on habit and daily completions
-- Five AI features powered by Gemini 2.5 Flash:
+- Five AI features powered by Gemini 3.6 Flash:
   - Personalized weekly report
   - Habit suggestion wizard
   - Streak recovery coach
@@ -50,24 +51,33 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 - date-fns for date math and heatmap generation
 
 **AI**
-- Google Gemini 2.5 Flash
+- Google Gemini 3.6 Flash
 
 ## Project Structure
 
 ```
 ai-habit-tracker/
-├── frontend/               # React + Vite frontend
+├── frontend/              # React + Vite frontend
 │   ├── src/
+│   │   ├── api/           # axios.js — configured Axios client (JWT auto-attach, 401 redirect)
+│   │   ├── assets/
 │   │   ├── components/
-│   │   ├── context/        # AuthContext, ThemeContext
+│   │   ├── context/       # AuthContext, ThemeContext
 │   │   ├── pages/
+│   │   ├── utils/
 │   │   └── ...
+│   ├── .env
 │   └── ...
-├── backend/                # Node.js + Express backend
-│   ├── models/             # User, Habit, HabitLog, AIInsight
-│   ├── routes/
-│   ├── controllers/
+├── backend/               # Node.js + Express backend
+│   ├── config/            # db.js — MongoDB Atlas connection
+│   ├── controllers/       # authController, habitController, logController, aiController
+│   ├── middleware/        # auth.js (JWT protect), errorHandler.js
+│   ├── models/            # User, Habit, HabitLog, AIInsight
+│   ├── routes/            # auth, habits, logs, ai
+│   ├── scripts/           # empty — reserved for the `seed` script (see Getting Started)
+│   ├── utils/             # dateHelpers.js (streak math), aiService.js (Gemini wrapper)
 │   └── ...
+├── API_TESTING.md
 ├── CHANGELOG.md
 └── README.md
 ```
@@ -92,39 +102,62 @@ ai-habit-tracker/
    ```
 2. Install backend dependencies
    ```bash
-   cd server
+   cd backend
    npm install
    ```
 3. Install frontend dependencies
    ```bash
-   cd ../client
+   cd ../frontend
    npm install
    ```
 4. Configure environment variables (see below)
 5. Seed the database (optional)
    ```bash
-   cd ../server
+   cd ../backend
    npm run seed
    ```
 6. Run the development servers
    ```bash
-   # from /server
+   # from /backend
    npm run dev
 
-   # from /client
+   # from /frontend
    npm run dev
    ```
 
 ## Environment Variables
 
-Create a `.env` file in the `server/` directory with the following:
+### Backend
+
+Create a `.env` file in the `backend/` directory with the following:
 
 ```
-MONGODB_URI=
+MONGO_URI=
 JWT_SECRET=
+JWT_EXPIRES_IN=
 GEMINI_API_KEY=
+GEMINI_MODEL=
+CLIENT_URL=
 PORT=
 ```
+
+- `MONGO_URI` — MongoDB Atlas (or local) connection string
+- `JWT_SECRET` — signing secret for auth tokens
+- `JWT_EXPIRES_IN` — optional, defaults to `30d`
+- `GEMINI_API_KEY` — enables the 5 AI features; app runs fine without it, AI routes just return a graceful fallback message
+- `GEMINI_MODEL` — optional, defaults to a current Gemini model in code; override here if Google deprecates the default
+- `CLIENT_URL` — comma-separated list of allowed frontend origins for CORS; `localhost`/`127.0.0.1` origins are always allowed in development regardless of this value
+- `PORT` — optional, defaults to `8000`
+
+### Frontend
+
+Create a `.env` file in the `frontend/` directory with the following:
+
+```
+VITE_API_URL=
+```
+
+- `VITE_API_URL` — base URL the Axios client points requests at (e.g. `http://localhost:8000/api`). Vite only exposes variables prefixed with `VITE_` to the app via `import.meta.env`, and the dev server must be restarted after changing this file for the new value to be picked up.
 
 ## Pages & Functionality
 
@@ -168,12 +201,16 @@ Places where this project intentionally diverges from tutorial instruction, trac
 
 - **Unmarking habit completions (`unmarkComplete`):** the tutorial used `findOneAndUpdate` to "unmark" a habit, but this was changed to `findOneAndDelete`. A `HabitLog` document has no `completed: Boolean` field to flip — the mere existence of the row for a given habit and date *is* the completion signal. Deleting the row is what actually reverts that day to incomplete, and it mirrors how `markComplete` creates the row in the first place.
 
+## Known Issues
+
+- **Frontend `baseURL` may not be reading `VITE_API_URL` yet** — as of the last session, `axios.js`'s `baseURL` was still hardcoded to `http://localhost:8000/api` instead of `import.meta.env.VITE_API_URL`, even though the `.env` variable is in place. It currently works only because the hardcoded value happens to match. A fix (`baseURL: import.meta.env.VITE_API_URL`) is staged for verification during the upcoming end-to-end testing session — update this note once confirmed.
+
 ## Roadmap
 
-- [ ] Finalize backend route/controller structure
-- [ ] Connect frontend to live API (currently mock data)
+- [x] Finalize backend route/controller structure
+- [x] Connect frontend to live API
 - [ ] Implement authentication flow end-to-end
-- [ ] Wire up Gemini AI features
+- [x] Wire up Gemini AI features
 - [ ] Polish responsive design across breakpoints
 
 ---

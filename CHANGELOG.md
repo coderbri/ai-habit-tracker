@@ -2,6 +2,35 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+<!-- ## v0.8.0 – End-to-End Testing
+**Release Date:** August 5, 2026
+
+- Test-ran both the backend and frontend dev servers together to confirm the integration
+
+--- -->
+
+## v0.7.0 – Connecting the Frontend to the Live API
+**Release Date:** August 4, 2026
+
+- Created a `.env` file in the frontend with `VITE_API_URL`, intended to point the Axios client at the backend — Vite exposes any variable prefixed with `VITE_` to the React app via `import.meta.env`
+- Noted for future reference: the dev server has to be restarted after adding or changing an env variable to pick it up — a running Vite server won't hot-reload `.env` changes
+- Replaced the mock API client with a real one in `frontend/src/api/axios.js`:
+  - Created an Axios instance with a base URL pointing at the backend
+  - Added a request interceptor that pulls the JWT from `localStorage` and attaches it as the `Authorization` header automatically, so it doesn't need to be added manually per call (previously simulated by hand in Postman)
+  - Added a response interceptor that watches for `401`s (expired/invalid token), clears `localStorage`, and redirects to `/login` — explicitly skipped on the landing and auth pages to avoid a redirect loop
+- Since every page already imports api from `axios.js`, wiring up the real client required no per-page changes
+- Deleted `frontend/src/utils/mockData.js` — the frontend is now fully integrated with the real backend instead of in-memory mock habits/logs/AI responses
+
+> Known issue: `axios.js`'s `baseURL` is still hardcoded to `"http://localhost:8000/api"` rather than reading `import.meta.env.VITE_API_URL`. The newly created `.env` variable isn't actually wired in yet — it currently works only because the hardcoded value happens to match.
+
+### Files created/modified:
+
+- `frontend/.env` (created — `VITE_API_URL`)
+- `frontend/src/api/axios.js` (mock client replaced with real Axios instance + interceptors)
+- `frontend/src/utils/mockData.js` (deleted)
+
+---
+
 ## v0.6.2 – Fixing Weekly Report Persistence
 **Release Date:** August 2, 2026
 

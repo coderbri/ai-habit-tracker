@@ -2,15 +2,67 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.9.0 – Building & Testing the Seed Script for Demo Data
+**Release Date:** August 6, 2026
+
+- Built `backend/scripts/seed.js` to generate realistic demo data — useful for testing, demos, or showing the app to someone for the first time without them having to spend half an hour manually creating and checking off habits
+- Wired up via the `seed` script already defined in `package.json` at the start of the project: `"seed": "node scripts/seed.js"`
+- Designed around a single demo user with 8 habits and roughly 500 completion logs spread across the last 90 days, using a deterministic pseudo-random function (seeded by day index + habit name length) so re-running the script produces the same data every time — reproducible demos, not random noise
+- If the demo user already exists, the script wipes their habits, logs, and AI insights first for a clean slate, then resets their profile; otherwise it creates the user fresh
+- Habit configs use underscore-prefixed fields to control the generated pattern, intentionally excluded from what actually gets written to the `Habit` document:
+  - `_streakProb` — base daily completion probability (`0.95` = consistent, `0.55` = struggling)
+  - `_pattern: "weekdays"` — reduces weekend completions for that habit
+  - `_pattern: "dropoff"` — weakens the most recent 2 weeks, simulating a habit the user is currently struggling with
+  - `_brokeAt` — forces a 5-day run of consecutive misses around that day offset, so a broken streak reliably shows up in the UI
+- Backdates each habit's `createdAt`/`updatedAt` by 89 days so the stats page shows meaningful 30-day completion rates immediately, despite the records being created at seed time
+- Bulk-inserts each habit's logs via `insertMany` with `ordered: false`, so a duplicate-key hit on the unique index doesn't abort the rest of the batch
+- Ensures the first 4 habits are marked complete for today, so the dashboard's "today" view has interesting partial progress on first look
+- Caught and fixed several bugs while writing and first-running the script: `connectDb` → `connectDB`, two `newDate()` calls → `new Date()`, `User.creat` → `User.create`, added the missing `category` field to seeded habits (was defaulting every habit to `"Other"`), corrected the weekend-reduction logic (`p *= 0.35` instead of an inverted `p += 0.35`), fixed the `_brokeAt` window to `>=` for a true 5-day break, and renamed `"Die project"` back to `"Side project"`
+- Ran `npm run seed` successfully:
+  ```bash
+  backend$ npm run seed
+
+  > ai-habit-tracker-backend@1.0.0 seed
+  > node scripts/seed.js
+
+  MongoDB connected ac-midlbfp-shard-00-01.cdkxd0q.mongodb.net
+  Found existing user avalovelace@gmail.com — clearing their data...
+
+  ✅ Seed complete
+     User: avalovelace@gmail.com
+     Password: password123
+     Habits: 8
+     Logs: ~499
+  ```
+- Logged into the web app with the seeded credentials and confirmed every major view is populated with realistic data:
+  - Dashboard: 90-day heatmap with varying intensity, summary cards all lit up
+  - Insights: AI weekly report has real data to analyze, this-week-vs-last-week chart shows genuine differences, category donut has multiple slices, per-habit performance bars rank habits by actual progress
+  - Statistics: best/longest streaks visible, monthly chart fully populated, AI chat bubble answers real questions (e.g. "what's my best performing category") grounded in actual data
+- This is the desired end state: a fully populated demo account ready as a baseline for testing, which the seed script can reset and rebuild from scratch on demand before showing the app to someone
+
+**Debugging "Login failed" — how it happened and how it was resolved:**
+While testing login with the freshly seeded credentials, the app returned a generic "Login failed" with no further detail. The browser console showed:
+```
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://localhost:8000/api/auth/login. (Reason: CORS request did not succeed). Status code: (null).
+```
+The `(null)` status was the key clue — a real CORS *policy* rejection returns an actual status code and a header-related message; `(null)` means the request never got a response at all. Ruled out the MongoDB cluster (matched fine between the seed script and the running app) and stale credentials (re-seeding created the user correctly) before confirming the real cause: hitting `GET /api/health` directly in the browser failed to load entirely, meaning nothing was listening on port 8000. `npm run seed` is a standalone script — it connects to MongoDB directly, writes the data, and exits without ever starting Express, so a successful seed run says nothing about whether the API server is actually running. The backend's `npm run dev` simply hadn't been started after the last restart. Starting it resolved the issue immediately. **Principle for next time:** a seed (or any DB write) succeeding is not evidence the API is up — always confirm the backend dev server is running, or hit `/api/health` directly, before treating a login/API failure as a code or credentials problem. Documented in full under README.md's new Troubleshooting section for quick reference if this recurs.
+
+Noted for a future deployment session (not yet started — that will be `v1.0.0`): Render is a candidate for deploying the backend, and Vercel or Netlify for the Vite-based frontend.
+
+### Files created/modified:
+
+- `backend/scripts/seed.js` (created, all flagged bugs fixed)
+- `README.md` (added Troubleshooting section)
+
+---
+
 ## v0.8.0 – End-to-End Testing All Features
 **Release Date:** August 6, 2026
 
 - Fixed the `baseURL` issue flagged in v0.7.0: `axios.js` now reads `import.meta.env.VITE_API_URL`, with a hardcoded localhost fallback for when the env variable isn't set:
-js
   ```js
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
   ```
-
 - Test-ran the backend and frontend dev servers together (`npm run dev` in each) to confirm the frontend is actually pulling its API URL from the environment rather than the old hardcoded value
 - Ran a full end-to-end pass across the app: user authentication, habit creation, and all five AI features tested successfully against the live backend
 
@@ -49,7 +101,7 @@ js
 - Added an `AIInsight.create()` call with `type: "weekly"`, matching the pattern already used by `suggestHabits`, `recoveryPlan`, `chatAnalysis`, and `morningMotivation`
 - Re-tested `POST /api/ai/weekly-report` in Postman and confirmed a document is now recorded in MongoDB after each call
 - First attempt at fixing the `completedDate` data bug from v0.6.1 (changing `h.completedDate` to `h.completed`) didn't resolve it — h is the raw Habit document and has no completed field
-- Correctly fixed on the second pass: `buildWeeklyContext` now returns **`completedDate: completed`**, referencing the local comp`leted variable (the actual computed 7-day completion count) instead of a non-existent property on h
+- Correctly fixed on the second pass: `buildWeeklyContext` now returns **`completedDate: completed`**, referencing the local completed variable (the actual computed 7-day completion count) instead of a non-existent property on h
 
 ### Files created/modified:
 
@@ -89,12 +141,12 @@ js
   - **Morning motivation** — a short personalized message each morning
 - Built the `AIInsight` model to persist every AI response:
   - `type` is constrained to `["weekly", "suggestion", "recovery", "chat", "morning"]`, useful for filtering by content type later
-  `meta` is a flexible field for extra context per type (e.g. the question asked, or the habit id behind a recovery plan)
+  - `meta` is a flexible field for extra context per type (e.g. the question asked, or the habit id behind a recovery plan)
   - Persisting insights matters for three reasons: (1) gives users a history to look back on, (2) enables caching to avoid re-calling the API for the same content, and (3) is real usage data to improve prompts later
 - Built the Gemini client wrapper (`utils/aiService.js`):
   - Lazily initializes the `GoogleGenAI` client only on first use, and only if `GEMINI_API_KEY` is set — so the app doesn't crash on startup when the key is missing
   - `isAIEnabled()` checks whether the key is configured
-  - `parseJSON()` strips markdown code fences (````json ... ````) from model output before parsing, for endpoints that expect structured JSON back
+  - `parseJSON()` strips markdown code fences (```json ... ```) from model output before parsing, for endpoints that expect structured JSON back
   - `chatCompletion()` wraps the actual Gemini call; if AI is disabled or the request fails, it returns a graceful fallback message instead of throwing
   - `SYSTEM_PROMPTS` holds one system instruction per feature, controlling tone, length, and (for suggestions) the expected JSON shape
 - Built `aiController.js` with `weeklyReport`, `suggestHabits`, `recoveryPlan`, `chatAnalysis`, and `morningMotivation`, each assembling the relevant habit/log context and calling `chatCompletion` with the matching system prompt
@@ -156,7 +208,7 @@ js
 ---
 
 ## v0.3.0 – Establishing User Model and Authentication
-**Released:** July 24, 2026
+**Release Date:** July 24, 2026
 
 - Built the `User` model with pre-save password hashing, an instance method to compare passwords on login, and a `toJSON` override to strip the password hash from any response
 - Built `protect` middleware to verify JWTs from the `Authorization` header and attach the authenticated user to `req.user`
@@ -175,7 +227,7 @@ js
 ---
 
 ## v0.2.0 – Setting up Environmental Variables and Backend Server
-**Released:** July 24, 2026
+**Release Date:** July 24, 2026
 
 - Created a MongoDB Atlas cluster and retrieved the connection API key
 - Retrieved a Gemini API key from Google AI Studio
@@ -183,13 +235,11 @@ js
   ```bash
   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
   ```
-
 - Completed `.env` file setup with the above credentials
 - Set up database configuration and server error-handling middleware
   - **`config/db.js`**: connects to MongoDB Atlas via Mongoose using `MONGO_URI`, exits the process on connection failure
   - **`middleware/errorHandler.js`**: notFound handler for unmatched routes, errorHandler for consistent JSON error responses
   - **`server.js`**: Express app setup with CORS (allows localhost in development plus explicit origins via `CLIENT_URL`), JSON body parsing, a `/api/health` check route, and error-handling middleware; server only starts listening after a successful DB connection
-
 - Verified server connection via the `/api/health` route:
   ```json
   {"status":"ok","time":"2026-07-24T20:40:48.769Z"}
@@ -205,7 +255,7 @@ js
 ---
 
 ## v0.1.0 – Project Structure Setup
-**Released:** July 24, 2026
+**Release Date:** July 24, 2026
 
 - Set up the frontend by cloning a boilerplate for initial structure and mock data
   - Frontend still requires configuration to be fully functional

@@ -10,6 +10,7 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
+- [Troubleshooting](#troubleshooting)
 - [Environment Variables](#environment-variables)
 - [Pages & Functionality](#pages--functionality)
 - [Implementation Notes](#implementation-notes)
@@ -74,7 +75,7 @@ ai-habit-tracker/
 │   ├── middleware/        # auth.js (JWT protect), errorHandler.js
 │   ├── models/
 │   ├── routes/
-│   ├── scripts/           # empty — reserved for the `seed` script (see Getting Started)
+│   ├── scripts/           # generates demo user/habits/logs (see Getting Started)
 │   ├── utils/             # dateHelpers.js (streak math), aiService.js (Gemini wrapper)
 │   └── ...
 ├── API_TESTING.md
@@ -124,6 +125,10 @@ ai-habit-tracker/
    # from /frontend
    npm run dev
    ```
+
+## Troubleshooting
+
+- **"Login failed" after seeding the database:** `npm run seed` completing successfully doesn't mean the API is running — it's a standalone script that connects directly to MongoDB and exits, never touching Express. First encountered this as a browser console error reading `CORS request did not succeed... Status code: (null)` when logging in with fresh seed credentials — a `(null)` status specifically means the request never got a response at all (a real CORS policy rejection returns an actual status code). Confirmed the cause by hitting `GET /api/health` directly in the browser, which failed to load — meaning nothing was listening on port 8000. Root cause: the backend dev server (`npm run dev`) wasn't running, only the one-off seed script had been. **Fix:** always confirm `npm run dev` is running in `backend/` (or check `/api/health` loads) before assuming a login failure is a credentials or CORS problem.
 
 ## Environment Variables
 
@@ -203,7 +208,7 @@ Places where this project intentionally diverges from tutorial instruction, trac
 
 ## Known Issues
 
-None currently — the `VITE_API_URL` fallback was verified working as of v0.8.0's end-to-end testing pass.
+None currently — the `VITE_API_URL` fallback was verified working as of v0.8.0's end-to-end testing pass, and the seed script's bugs were all resolved and verified in v0.9.0.
 
 ## Roadmap
 

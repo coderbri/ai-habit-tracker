@@ -8,9 +8,9 @@ import axios from "axios";
 
 /** Custom Axios instance configured for backend API endpoints. */
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  // TODO: Production environment variable fallback:
-  // baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  // baseURL: "http://localhost:8000/api",
+  // Production environment variable fallback:
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
 });
 
 /**

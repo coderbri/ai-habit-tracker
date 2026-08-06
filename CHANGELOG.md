@@ -2,12 +2,23 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
-<!-- ## v0.8.0 – End-to-End Testing
-**Release Date:** August 5, 2026
+## v0.8.0 – End-to-End Testing All Features
+**Release Date:** August 6, 2026
 
-- Test-ran both the backend and frontend dev servers together to confirm the integration
+- Fixed the `baseURL` issue flagged in v0.7.0: `axios.js` now reads `import.meta.env.VITE_API_URL`, with a hardcoded localhost fallback for when the env variable isn't set:
+js
+  ```js
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api",
+  ```
 
---- -->
+- Test-ran the backend and frontend dev servers together (`npm run dev` in each) to confirm the frontend is actually pulling its API URL from the environment rather than the old hardcoded value
+- Ran a full end-to-end pass across the app: user authentication, habit creation, and all five AI features tested successfully against the live backend
+
+### Files created/modified:
+
+- **`frontend/src/api/axios.js`** (fixed `baseURL` to read `VITE_API_URL` with a local fallback)
+
+---
 
 ## v0.7.0 – Connecting the Frontend to the Live API
 **Release Date:** August 4, 2026

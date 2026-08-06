@@ -59,7 +59,7 @@ A full-stack, AI-powered habit tracking application built with the MERN stack. U
 ai-habit-tracker/
 ├── frontend/              # React + Vite frontend
 │   ├── src/
-│   │   ├── api/           # axios.js — configured Axios client (JWT auto-attach, 401 redirect)
+│   │   ├── api/           # Axios client (JWT auto-attach, 401 redirect)
 │   │   ├── assets/
 │   │   ├── components/
 │   │   ├── context/       # AuthContext, ThemeContext
@@ -69,11 +69,11 @@ ai-habit-tracker/
 │   ├── .env
 │   └── ...
 ├── backend/               # Node.js + Express backend
-│   ├── config/            # db.js — MongoDB Atlas connection
-│   ├── controllers/       # authController, habitController, logController, aiController
+│   ├── config/            # MongoDB Atlas connection
+│   ├── controllers/
 │   ├── middleware/        # auth.js (JWT protect), errorHandler.js
-│   ├── models/            # User, Habit, HabitLog, AIInsight
-│   ├── routes/            # auth, habits, logs, ai
+│   ├── models/
+│   ├── routes/
 │   ├── scripts/           # empty — reserved for the `seed` script (see Getting Started)
 │   ├── utils/             # dateHelpers.js (streak math), aiService.js (Gemini wrapper)
 │   └── ...
@@ -203,13 +203,13 @@ Places where this project intentionally diverges from tutorial instruction, trac
 
 ## Known Issues
 
-- **Frontend `baseURL` may not be reading `VITE_API_URL` yet** — as of the last session, `axios.js`'s `baseURL` was still hardcoded to `http://localhost:8000/api` instead of `import.meta.env.VITE_API_URL`, even though the `.env` variable is in place. It currently works only because the hardcoded value happens to match. A fix (`baseURL: import.meta.env.VITE_API_URL`) is staged for verification during the upcoming end-to-end testing session — update this note once confirmed.
+None currently — the `VITE_API_URL` fallback was verified working as of v0.8.0's end-to-end testing pass.
 
 ## Roadmap
 
 - [x] Finalize backend route/controller structure
 - [x] Connect frontend to live API
-- [ ] Implement authentication flow end-to-end
+- [x] Implement authentication flow end-to-end
 - [x] Wire up Gemini AI features
 - [ ] Polish responsive design across breakpoints
 

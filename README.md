@@ -1,224 +1,101 @@
-# AI Habit Tracker
+# AI Habit Tracker — Build Habits That Stick, With a Gemini-Powered Coach
 
-A full-stack, AI-powered habit tracking application built with the MERN stack. Users can build and maintain daily habits with streak tracking, a 90-day GitHub-styled activity heatmap, weekly insights, and five AI features powered by Google Gemini 3.6 Flash.
+> A full-stack habit tracker with streaks, a 90-day heatmap, weekly insights, and five Google Gemini AI features, for anyone who wants their habit data to coach them back.
 
-> **Note:** This is a personal tutorial/learning project used to practice implementing patterns and features for future personal projects. It is not intended for public deployment.
+![The AI Habit Tracker landing page in light mode, with an animated orbit of habit icons](docs/screenshots/hero.png)
 
-## Table of Contents
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-LTS-339933?logo=nodedotjs&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?logo=mongodb&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Gemini](https://img.shields.io/badge/Gemini-3.6_Flash-8E75B2?logo=googlegemini&logoColor=white)
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Troubleshooting](#troubleshooting)
-- [Environment Variables](#environment-variables)
-- [Pages & Functionality](#pages--functionality)
-- [Implementation Notes](#implementation-notes)
-- [Known Issues](#known-issues)
-- [Roadmap](#roadmap)
+## Overview
 
-## Features
+AI Habit Tracker is a MERN-stack app where users check off daily habits, build streaks, and explore their consistency through a GitHub-style heatmap and theme-aware analytics. Five Gemini-powered features turn that data into personalized reports, suggestions, recovery plans, answers, and daily motivation. It includes JWT authentication, light and dark themes, and a seed script that builds a fully populated demo account.
 
-- Secure user authentication (registration/login) with hashed passwords and JWT-based sessions
-- Daily habit check-offs with streak tracking
-- 90-day GitHub-styled consistency heatmap
-- Weekly insights dashboard with themed charts
-- Light/dark mode with persisted theme preference
-- Confetti celebrations on habit and daily completions
-- Five AI features powered by Gemini 3.6 Flash:
-  - Personalized weekly report
-  - Habit suggestion wizard
-  - Streak recovery coach
-  - AI habit data chat
-  - Morning motivation messages
+**My contribution:** Built the full backend by following the tutorial (REST API, four Mongoose models, JWT auth, streak logic, Gemini integration) and connected it to the tutorial's frontend boilerplate. Beyond the tutorial, I debugged and fixed issues found during testing, migrated the AI model to Gemini 3.6 Flash after 2.5 Flash was retired, switched unmarking to `findOneAndDelete`, tested every endpoint in Postman, and wrote the changelog and documentation.
+
+## AI Features
+
+- **Weekly report:** a personalized review of the past 7 days, generated once per week and cached
+- **Habit suggestion wizard:** answer three questions and get three tailored habits, each added in one click
+- **Streak recovery coach:** a 3-day comeback plan when a 7+ day streak breaks
+- **Habit data chat:** ask questions like "Which day am I most consistent?" and get answers grounded in your real data
+- **Morning motivation:** a short daily message that names your actual habits and streaks
+
+## Engineering Highlights
+
+- **Secure authentication:** bcrypt-hashed passwords, JWT sessions, and a `toJSON` override that strips the hash from every response
+- **Per-user data isolation:** every query is scoped to the authenticated user, so one account can never read or change another's data
+- **Idempotent check-offs:** a unique compound index plus an upsert means double clicks and retries can't create duplicate completions
+- **Timezone-safe dates:** completions are stored as `YYYY-MM-DD` strings so streaks and range queries don't drift
+- **Graceful AI degradation:** a missing key or failed call returns a fallback message instead of crashing, and malformed suggestion JSON falls back to defaults
+- **Documented and tested API:** every endpoint verified in Postman with recorded examples, plus a versioned changelog of the debugging trail
 
 ## Tech Stack
 
-**Frontend**
-- React 19 + Vite
-- Tailwind CSS v4 (theme tokens, glass utilities, dark mode via `@custom-variant`)
-- React Router
-- Context API (`AuthContext`, `ThemeContext`)
-- Recharts for data visualization
-- Custom-built heatmap component
-- react-markdown for rendering AI responses
-- canvas-confetti for completion celebrations
+| Layer | Technology |
+| --- | --- |
+| **Frontend** | React 19, Vite, Tailwind CSS v4, React Router, Recharts |
+| **Backend** | Node.js, Express, JWT, bcrypt.js |
+| **Database** | MongoDB Atlas with Mongoose |
+| **AI** | Google Gemini 3.6 Flash via `@google/genai` |
 
-**Backend**
-- Node.js + Express (REST API)
-- MongoDB Atlas + Mongoose
-  - Models: `User`, `Habit`, `HabitLog`, `AIInsight`
-- Authentication: JWT + bcrypt.js
-- date-fns for date math and heatmap generation
+## Screenshots
 
-**AI**
-- Google Gemini 3.6 Flash
+![Checking off a habit triggers a confetti burst and updates the progress ring](docs/screenshots/feature-demo.gif)
 
-## Project Structure
+| Dashboard | Insights |
+| --- | --- |
+| ![Dashboard with today's habits, weekly grid, and 90-day heatmap](docs/screenshots/dashboard.gif) | ![Insights page with AI weekly report and charts](docs/screenshots/insights.png) |
 
-```
-ai-habit-tracker/
-├── frontend/              # React + Vite frontend
-│   ├── src/
-│   │   ├── api/           # Axios client (JWT auto-attach, 401 redirect)
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── context/       # AuthContext, ThemeContext
-│   │   ├── pages/
-│   │   ├── utils/
-│   │   └── ...
-│   ├── .env
-│   └── ...
-├── backend/               # Node.js + Express backend
-│   ├── config/            # MongoDB Atlas connection
-│   ├── controllers/
-│   ├── middleware/        # auth.js (JWT protect), errorHandler.js
-│   ├── models/
-│   ├── routes/
-│   ├── scripts/           # generates demo user/habits/logs (see Getting Started)
-│   ├── utils/             # dateHelpers.js (streak math), aiService.js (Gemini wrapper)
-│   └── ...
-├── API_TESTING.md
-├── CHANGELOG.md
-└── README.md
+| Habit Suggestion Wizard | Statistics and AI Chat |
+| --- | --- |
+| ![AI habit suggestion wizard showing three suggestions](docs/screenshots/habit-suggestion-wizard.gif) | ![Statistics page with the AI chat panel open](docs/screenshots/statistics-ai-chat.png) |
+
+More screenshots are in the [full documentation](docs/DOCUMENTATION.md#screenshots).
+
+## Quick Start
+
+Requires Node.js (LTS), a MongoDB Atlas cluster, and a Google Gemini API key.
+
+```bash
+git clone https://github.com/coderbri/ai-habit-tracker.git
+cd TODO-repo
+
+# Backend (terminal 1)
+cd backend
+npm install
+cp .env.example .env   # then add your MongoDB URI, JWT secret, and Gemini key
+npm run seed
+npm run dev
+
+# Frontend (terminal 2)
+cd frontend
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-> Update this structure as directories are finalized during development.
+Open `http://localhost:5173` and sign in with the demo account created by the seed script:
 
-## Getting Started
+| Email | Password |
+| --- | --- |
+| `avalovelace@gmail.com` | `password123` |
 
-### Prerequisites
+See the [full documentation](docs/DOCUMENTATION.md#environment-variables) for every environment variable.
 
-- Node.js (LTS recommended)
-- npm
-- A MongoDB Atlas cluster (or local MongoDB instance)
-- A Google Gemini API key
+## Learn More
 
-### Installation
+- **[Full documentation](docs/DOCUMENTATION.md):** features, setup, environment variables, API reference, database schema, security decisions, and the full screenshot gallery
+- **[CHANGELOG.md](CHANGELOG.md):** what shipped in each version
+- **[Build notes](docs/NOTES.md):** the logic behind each stage and lessons learned
 
-1. Clone the repository
-   ```bash
-   git clone <repo-url>
-   cd ai-habit-tracker
-   ```
-2. Install backend dependencies
-   ```bash
-   cd backend
-   npm install
-   ```
-3. Install frontend dependencies
-   ```bash
-   cd ../frontend
-   npm install
-   ```
-4. Configure environment variables (see below)
-5. Seed the database (optional)
-   ```bash
-   cd ../backend
-   npm run seed
-   ```
-6. Run the development servers
-   ```bash
-   # from /backend
-   npm run dev
+## Acknowledgments
 
-   # from /frontend
-   npm run dev
-   ```
+Based on [Build a Full-Stack AI-Powered Habit Tracker App | MERN, React, Node.js, MongoDB, Express](https://youtu.be/PO-UZsQnkNU) by Time to Program.
 
-## Troubleshooting
+## License
 
-- **"Login failed" after seeding the database:** `npm run seed` completing successfully doesn't mean the API is running — it's a standalone script that connects directly to MongoDB and exits, never touching Express. First encountered this as a browser console error reading `CORS request did not succeed... Status code: (null)` when logging in with fresh seed credentials — a `(null)` status specifically means the request never got a response at all (a real CORS policy rejection returns an actual status code). Confirmed the cause by hitting `GET /api/health` directly in the browser, which failed to load — meaning nothing was listening on port 8000. Root cause: the backend dev server (`npm run dev`) wasn't running, only the one-off seed script had been. **Fix:** always confirm `npm run dev` is running in `backend/` (or check `/api/health` loads) before assuming a login failure is a credentials or CORS problem.
-
-## Environment Variables
-
-### Backend
-
-Create a `.env` file in the `backend/` directory with the following:
-
-```
-MONGO_URI=
-JWT_SECRET=
-JWT_EXPIRES_IN=
-GEMINI_API_KEY=
-GEMINI_MODEL=
-CLIENT_URL=
-PORT=
-```
-
-- `MONGO_URI` — MongoDB Atlas (or local) connection string
-- `JWT_SECRET` — signing secret for auth tokens
-- `JWT_EXPIRES_IN` — optional, defaults to `30d`
-- `GEMINI_API_KEY` — enables the 5 AI features; app runs fine without it, AI routes just return a graceful fallback message
-- `GEMINI_MODEL` — optional, defaults to a current Gemini model in code; override here if Google deprecates the default
-- `CLIENT_URL` — comma-separated list of allowed frontend origins for CORS; `localhost`/`127.0.0.1` origins are always allowed in development regardless of this value
-- `PORT` — optional, defaults to `8000`
-
-### Frontend
-
-Create a `.env` file in the `frontend/` directory with the following:
-
-```
-VITE_API_URL=
-```
-
-- `VITE_API_URL` — base URL the Axios client points requests at (e.g. `http://localhost:8000/api`). Vite only exposes variables prefixed with `VITE_` to the app via `import.meta.env`, and the dev server must be restarted after changing this file for the new value to be picked up.
-
-## Pages & Functionality
-
-### Landing Page
-Glassmorphism design with light/dark mode, quick access to authentication, two feature preview cards, a four-feature overview, and a call-to-action.
-
-### Dashboard
-- Sidebar navigation: Dashboard, Habits, Weekly, Insights, Statistics, theme picker, and a settings modal (update display name, toggle morning motivation)
-- User profile + logout
-- New Habit modal (name, description, category, frequency, target day, icon, color)
-- Suggest a Habit: 3-step AI wizard that recommends a tailored habit and auto-fills the form based on user goals, productivity windows, and struggles
-- AI motivational message
-- Streak recovery card (AI-generated recovery plan for habits broken 7+ days)
-- Summary cards: total habits, active streaks, best streak, weekly completion rate
-- Habit list with category chips, streak counts, and confetti on completion
-- AI-generated weekly report (120–180 words)
-- Weekly grid (current week, color-coded per habit) and 90-day heatmap
-
-### Habit Management
-Extended habit stats (current streak, longest streak, 90-day completions) with edit, archive, and delete actions. Archived habits retain full history but are hidden from the daily list.
-
-### Weekly Overview
-Week navigation (past weeks browsable, future weeks disabled), summary cards (week rate, total completions, best day, top habit), and a weekly completion grid.
-
-### Insights
-- AI weekly reports, auto-generated on first visit per week and cached locally by week start date (regenerate button available to force a refresh)
-- Summary cards with week-over-week delta indicators
-- Charts: completions by day, this week vs. last week, completions by category, habit performance (done vs. target), and an active streaks board
-
-### Statistics
-- All-time highest and longest streak highlights, and a "needs attention" flag for the most struggling habit
-- 7-day and 30-day completion charts
-- Category distribution pie chart
-- Top habits progress list (ranked by 30-day completions)
-- Full habit list with icon, streak, and completion stats
-- Floating AI chat bubble for querying personal habit data (context built server-side from habit history and passed to Gemini), rendered with markdown support
-
-## Implementation Notes
-
-Places where this project intentionally diverges from tutorial instruction, tracked here along with the reasoning for future reference.
-
-- **Unmarking habit completions (`unmarkComplete`):** the tutorial used `findOneAndUpdate` to "unmark" a habit, but this was changed to `findOneAndDelete`. A `HabitLog` document has no `completed: Boolean` field to flip — the mere existence of the row for a given habit and date *is* the completion signal. Deleting the row is what actually reverts that day to incomplete, and it mirrors how `markComplete` creates the row in the first place.
-
-## Known Issues
-
-None currently — the `VITE_API_URL` fallback was verified working as of v0.8.0's end-to-end testing pass, and the seed script's bugs were all resolved and verified in v0.9.0.
-
-## Roadmap
-
-- [x] Finalize backend route/controller structure
-- [x] Connect frontend to live API
-- [x] Implement authentication flow end-to-end
-- [x] Wire up Gemini AI features
-- [ ] Polish responsive design across breakpoints
-
----
-<section align="center">
-  <code>coderBri © 2026</code>
-</section>
+Released under the [MIT License](LICENSE).

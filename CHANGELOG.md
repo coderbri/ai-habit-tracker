@@ -2,6 +2,36 @@
 
 All notable changes to the AI Habit Tracker project will be documented in this file.
 
+## v0.10.0 – Documentation Restructure
+**Release Date:** October 17, 2026
+
+- Restructured the project's documentation into two tiers now that the repository is public: a concise root `README.md` that recruiters and other developers can digest in under a minute, and a full technical reference in `docs/` for everything deeper
+- Created the `docs/` directory to hold the detailed documentation, build notes, API testing notes, and screenshots
+- Rewrote the root `README.md` as a showcase page: tagline, hero image, technology badges, overview with a "My contribution" note, AI features, engineering highlights, tech stack table, screenshots (including GIFs of the signature features), quick start with the demo login, and links to the deeper docs. The long-form sections that used to live there (page-by-page breakdown, Implementation Notes, Known Issues, Roadmap, Troubleshooting) moved into `docs/`
+- Added `docs/DOCUMENTATION.md` as the complete reference: features, tech stack, a Mermaid architecture diagram, setup, environment variables, API reference, database schema, a Security & Reliability section, project structure, the full screenshot gallery, and a development log table summarizing v0.1.0 through v0.9.0
+  - Documented the API's real error shape (`{ "message": "..." }`) rather than a generic one
+  - Moved the "Login failed" troubleshooting writeup here and added two new entries: a `querySrv ENOTFOUND` startup crash (a paused or deleted free-tier Atlas cluster, plus DNS checks) and the reminder that Vite only reads `.env` at startup
+- Added `docs/NOTES.md`, turning the project takeaways into build notes: the key lessons (silent failures, reading error messages as evidence, a successful seed not meaning a running server), how the streak, idempotent check-off, heatmap, AI context, and seed logic work, useful commands, implementation notes on where this build departs from the tutorial, and a plan for building a personal version
+- Moved `API_TESTING.md` into `docs/` so all reference material lives together, and updated the links that pointed to its old location
+- Added `.env.example` files for the backend and frontend so visitors can see which variables are expected without exposing secrets, and switched the Quick Start to `cp .env.example .env`
+- Added an MIT `LICENSE` at the project root
+- Updated all AI model references in the docs to Gemini 3.6 Flash
+
+### Files created/modified:
+
+- `README.md` (rewritten as a concise showcase; long-form sections moved to `docs/`)
+- `LICENSE` (created — MIT)
+- `docs/` (created)
+- `docs/DOCUMENTATION.md` (created)
+- `docs/NOTES.md` (created)
+- `docs/API_TESTING.md` (moved from the project root)
+- `docs/screenshots/` (created — images and GIFs used by the README and DOCUMENTATION.md)
+- `backend/.env.example` (variable template, no secrets)
+- `frontend/.env.example` (variable template, no secrets)
+- `CHANGELOG.md` (updated `API_TESTING.md` links to `docs/API_TESTING.md`)
+
+---
+
 ## v0.9.0 – Building & Testing the Seed Script for Demo Data
 **Release Date:** August 6, 2026
 
